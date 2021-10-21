@@ -6,8 +6,8 @@ spec:
   config: 
     plugin_1_name:
       plugin_1_name:
-        Data: 1
-    plugin_2_name:
-      plugin_2_name:
-        Data: 1
+        field1: 1
+        field2: 
+          field3: 3
+          field4: 4
   size: 3

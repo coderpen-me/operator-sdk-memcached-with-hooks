@@ -76,6 +76,7 @@ func (r *Memcached) ValidateCreate() error {
 	memcachedlog.Info("validate create", "name", r.Name)
 
 	resp := ValidatorResponse{}
+	resp.Status = true
 	resp.PluginError = make(map[string]string)
 
 	for key, value := range r.Spec.Config {
