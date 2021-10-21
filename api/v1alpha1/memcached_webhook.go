@@ -76,16 +76,13 @@ func (r *Memcached) ValidateCreate() error {
 	memcachedlog.Info("validate create", "name", r.Name)
 
 	resp := ValidatorResponse{}
-
-	fmt.Println("Going inside for")
+	resp.PluginError = make(map[string]string)
 
 	for key, value := range r.Spec.Config {
 		m := make(map[string]interface{})
-		fmt.Println("key", key, "value", value)
 		switch key {
 		case "plugin_1_name":
 			{
-				fmt.Println(" IN 1 ")
 				p := Plugin1{}
 				// Load the JSON into a map.
 				if err := json.Unmarshal(value.Raw, &m); err != nil {
@@ -108,7 +105,6 @@ func (r *Memcached) ValidateCreate() error {
 			}
 		case "plugin_2_name":
 			{
-				fmt.Println("  IN   2   ")
 				p := Plugin2{}
 				// Load the JSON into a map.
 				if err := json.Unmarshal(value.Raw, &m); err != nil {
@@ -131,7 +127,6 @@ func (r *Memcached) ValidateCreate() error {
 			}
 		default:
 			{
-				fmt.Println("  IN DEF ")
 				resp.PluginError[key] = "Plugin format is invalid"
 				resp.Status = false
 			}
