@@ -27,11 +27,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
-type Response struct {
-	Errors error `json:"errors,omitempty"`
-	OK     bool  `json:"ok"`
-}
-
 // log is for logging in this package.
 var memcachedlog = logf.Log.WithName("memcached-resource")
 
@@ -79,16 +74,11 @@ func (r *Memcached) ValidateCreate() error {
 	}
 
 	typeErrors := rs.Errors()
-	resp := &Response{
-		OK:     typeErrors == nil,
-		Errors: typeErrors,
-	}
-	respJson, _ := json.MarshalIndent(resp, "", "    ")
 
-	memcachedlog.Info("validate create error", "name", string(respJson))
-
-	if !resp.OK {
-		return fmt.Errorf("Config format invalid : " + string(respJson))
+	if typeErrors != nil {
+		memcachedlog.Info("validate create error", "mismatch", (rs.MismatchedFields), "missing", rs.MissingFields)
+		memcachedlog.Info("validate create error", "typeErrors", (typeErrors))
+		return fmt.Errorf("Config format invalid : ", (rs.MismatchedFields), rs.MissingFields)
 	}
 
 	// TODO(user): fill in your validation logic upon object creation.
