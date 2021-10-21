@@ -54,6 +54,23 @@ func (r *Memcached) Default() {
 
 var _ webhook.Validator = &Memcached{}
 
+func TypeConversion(from schema.CompareResults) ([]MissingField, []MismatchedField) {
+	var toMissing []MissingField
+	var toMismatched []MismatchedField
+
+	for _, b := range from.MissingFields {
+		newMissingField := MissingField{Field: b.Field, Path: b.Path} // pulled out for clarity
+		toMissing = append(toMissing, newMissingField)
+	}
+
+	for _, b := range from.MismatchedFields {
+		newMismatchedField := MismatchedField{Actual: b.Actual, Expected: b.Expected, Field: b.Field, Path: b.Path} // pulled out for clarity
+		toMismatched = append(toMismatched, newMismatchedField)
+	}
+
+	return toMissing, toMismatched
+}
+
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *Memcached) ValidateCreate() error {
 	memcachedlog.Info("validate create", "name", r.Name)
@@ -69,7 +86,7 @@ func (r *Memcached) ValidateCreate() error {
 				// Load the JSON into a map.
 				if err := json.Unmarshal(value.Raw, &m); err != nil {
 					resp.PluginError[key] = "Plugin format is invalid"
-					resp.status = false
+					resp.Status = false
 				}
 
 				// Check the types.
@@ -77,11 +94,13 @@ func (r *Memcached) ValidateCreate() error {
 
 				if err != nil {
 					resp.PluginError[key] = "Plugin format is invalid"
-					resp.status = false
+					resp.Status = false
 				}
 
-				resp.Data.MissingFields = append(resp.Data.MissingFields, rs.MissingFields...)
-				resp.Data.MismatchedFields = append(resp.Data.MismatchedFields, rs.MismatchedFields...)
+				missingFields, mismatchedFields := TypeConversion(*rs)
+
+				resp.Data.MissingFields = append(resp.Data.MissingFields, missingFields...)
+				resp.Data.MismatchedFields = append(resp.Data.MismatchedFields, mismatchedFields...)
 			}
 		case "plugin_2_name":
 			{
@@ -89,7 +108,7 @@ func (r *Memcached) ValidateCreate() error {
 				// Load the JSON into a map.
 				if err := json.Unmarshal(value.Raw, &m); err != nil {
 					resp.PluginError[key] = "Plugin format is invalid"
-					resp.status = false
+					resp.Status = false
 				}
 
 				// Check the types.
@@ -97,21 +116,23 @@ func (r *Memcached) ValidateCreate() error {
 
 				if err != nil {
 					resp.PluginError[key] = "Plugin format is invalid"
-					resp.status = false
+					resp.Status = false
 				}
 
-				resp.Data.MissingFields = append(resp.Data.MissingFields, rs.MissingFields...)
-				resp.Data.MismatchedFields = append(resp.Data.MismatchedFields, rs.MismatchedFields...)
+				missingFields, mismatchedFields := TypeConversion(*rs)
+
+				resp.Data.MissingFields = append(resp.Data.MissingFields, missingFields...)
+				resp.Data.MismatchedFields = append(resp.Data.MismatchedFields, mismatchedFields...)
 			}
 		default:
 			{
 				resp.PluginError[key] = "Plugin format is invalid"
-				resp.status = false
+				resp.Status = false
 			}
 		}
 	}
 
-	if !resp.status {
+	if !resp.Status {
 		memcachedlog.Info("validate create error", "mismatch", (resp.Data.MismatchedFields), "missing", resp.Data.MissingFields, "plugin_error", resp.PluginError)
 		return fmt.Errorf("config format invalid")
 	}
