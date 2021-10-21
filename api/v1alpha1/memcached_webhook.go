@@ -28,8 +28,8 @@ import (
 )
 
 type Response struct {
-	Errors map[string]string `json:"errors,omitempty"`
-	OK     bool              `json:"ok"`
+	Errors error `json:"errors,omitempty"`
+	OK     bool  `json:"ok"`
 }
 
 // log is for logging in this package.
@@ -78,29 +78,17 @@ func (r *Memcached) ValidateCreate() error {
 		panic(err)
 	}
 
+	typeErrors := rs.Errors()
 	resp := &Response{
-		OK: true,
+		OK:     typeErrors == nil,
+		Errors: typeErrors,
 	}
-
-	// Notify the client of any errors.
-	if len(rs.MissingFields) > 0 {
-		m := make(map[string]string)
-
-		for _, f := range rs.MissingFields {
-			m[f.String()] = "this field is required"
-		}
-
-		resp.OK = false
-		resp.Errors = m
-	}
-
-	respJson, _ := json.Marshal(resp)
+	respJson, _ := json.MarshalIndent(resp, "", "    ")
 
 	memcachedlog.Info("validate create error", "name", string(respJson))
-	fmt.Println(string(respJson))
 
-	if resp.OK == false {
-		return fmt.Errorf("Config format invalid")
+	if !resp.OK {
+		return fmt.Errorf("Config format invalid : " + string(respJson))
 	}
 
 	// TODO(user): fill in your validation logic upon object creation.

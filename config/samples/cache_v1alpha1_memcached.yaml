@@ -6,4 +6,6 @@ spec:
   config: 
     first: 
       data: 5
+      field2: 
+        test: Hi
   size: 3
