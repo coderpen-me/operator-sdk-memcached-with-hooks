@@ -4,5 +4,6 @@ metadata:
   name: memcached-sample-2
 spec:
   config: 
-    data: 4
+    first: 
+      data: 5
   size: 3

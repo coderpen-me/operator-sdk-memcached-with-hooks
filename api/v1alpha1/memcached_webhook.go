@@ -66,8 +66,6 @@ func (r *Memcached) ValidateCreate() error {
 	m := make(map[string]interface{})
 	p := Plugin1{}
 
-	memcachedlog.Info("validate create", "json input", r.Spec.Config["first"].Raw)
-
 	// Load the JSON into a map.
 	if err := json.Unmarshal(r.Spec.Config["first"].Raw, &m); err != nil {
 		panic(err)
@@ -102,7 +100,7 @@ func (r *Memcached) ValidateCreate() error {
 	fmt.Println(string(respJson))
 
 	if resp.OK == false {
-		return fmt.Errorf("Format issue")
+		return fmt.Errorf("Config format invalid")
 	}
 
 	// TODO(user): fill in your validation logic upon object creation.
