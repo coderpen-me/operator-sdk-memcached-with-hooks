@@ -78,7 +78,7 @@ func (r *Memcached) ValidateCreate() error {
 	if typeErrors != nil {
 		memcachedlog.Info("validate create error", "mismatch", (rs.MismatchedFields), "missing", rs.MissingFields)
 		memcachedlog.Info("validate create error", "typeErrors", (typeErrors))
-		return fmt.Errorf("Config format invalid : ", (rs.MismatchedFields), rs.MissingFields)
+		return fmt.Errorf("config format invalid")
 	}
 
 	// TODO(user): fill in your validation logic upon object creation.
