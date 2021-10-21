@@ -58,30 +58,64 @@ var _ webhook.Validator = &Memcached{}
 func (r *Memcached) ValidateCreate() error {
 	memcachedlog.Info("validate create", "name", r.Name)
 
-	m := make(map[string]interface{})
-	p := Plugin1{}
+	resp := ValidatorResponse{}
 
-	// Load the JSON into a map.
-	if err := json.Unmarshal(r.Spec.Config["first"].Raw, &m); err != nil {
-		panic(err)
+	for key, value := range r.Spec.Config {
+		m := make(map[string]interface{})
+		switch key {
+		case "plugin_1_name":
+			{
+				p := Plugin1{}
+				// Load the JSON into a map.
+				if err := json.Unmarshal(value.Raw, &m); err != nil {
+					resp.PluginError[key] = "Plugin format is invalid"
+					resp.status = false
+				}
+
+				// Check the types.
+				rs, err := schema.CompareMapToStruct(&p, m, nil)
+
+				if err != nil {
+					resp.PluginError[key] = "Plugin format is invalid"
+					resp.status = false
+				}
+
+				resp.Data.MissingFields = append(resp.Data.MissingFields, rs.MissingFields...)
+				resp.Data.MismatchedFields = append(resp.Data.MismatchedFields, rs.MismatchedFields...)
+			}
+		case "plugin_2_name":
+			{
+				p := Plugin2{}
+				// Load the JSON into a map.
+				if err := json.Unmarshal(value.Raw, &m); err != nil {
+					resp.PluginError[key] = "Plugin format is invalid"
+					resp.status = false
+				}
+
+				// Check the types.
+				rs, err := schema.CompareMapToStruct(&p, m, nil)
+
+				if err != nil {
+					resp.PluginError[key] = "Plugin format is invalid"
+					resp.status = false
+				}
+
+				resp.Data.MissingFields = append(resp.Data.MissingFields, rs.MissingFields...)
+				resp.Data.MismatchedFields = append(resp.Data.MismatchedFields, rs.MismatchedFields...)
+			}
+		default:
+			{
+				resp.PluginError[key] = "Plugin format is invalid"
+				resp.status = false
+			}
+		}
 	}
 
-	// Check the types.
-	rs, err := schema.CompareMapToStruct(&p, m, nil)
-
-	if err != nil {
-		panic(err)
-	}
-
-	typeErrors := rs.Errors()
-
-	if typeErrors != nil {
-		memcachedlog.Info("validate create error", "mismatch", (rs.MismatchedFields), "missing", rs.MissingFields)
-		memcachedlog.Info("validate create error", "typeErrors", (typeErrors))
+	if !resp.status {
+		memcachedlog.Info("validate create error", "mismatch", (resp.Data.MismatchedFields), "missing", resp.Data.MissingFields, "plugin_error", resp.PluginError)
 		return fmt.Errorf("config format invalid")
 	}
 
-	// TODO(user): fill in your validation logic upon object creation.
 	return nil
 }
 
